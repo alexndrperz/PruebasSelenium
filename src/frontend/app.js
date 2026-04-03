@@ -1,18 +1,30 @@
 const API = 'https://localhost:7024/api/crm';
+const AUTH = 'https://localhost:7024/api/auth';
 const modal = new bootstrap.Modal(document.getElementById('crmModal'));
+let entries = [];
+
+// Auth guard
+const user = localStorage.getItem('user');
+if (!user) window.location.href = 'login.html';
+document.getElementById('navUser').textContent = user;
+
+function logout() {
+  localStorage.removeItem('user');
+  window.location.href = 'login.html';
+}
 
 async function load() {
   const tbody = document.getElementById('tableBody');
   try {
     const res  = await fetch(API);
-    const data = await res.json();
-    // console.log(data);
-    if (data.length === 0) {
+    entries    = await res.json();
+
+    if (entries.length === 0) {
       tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-muted">Sin registros aún</td></tr>';
       return;
     }
 
-    tbody.innerHTML = data.map(e => `
+    tbody.innerHTML = entries.map((e, i) => `
       <tr>
         <td>${e.id}</td>
         <td>${e.customerName}</td>
@@ -21,13 +33,23 @@ async function load() {
         <td>${new Date(e.createdAt).toLocaleDateString('es-AR')}</td>
         <td>
           <button class="btn btn-sm btn-outline-secondary me-1" onclick="edit(${e.id})">Editar</button>
-          <button class="btn btn-sm btn-outline-danger"          onclick="remove(${e.id})">Eliminar</button>
+          <button class="btn btn-sm btn-outline-danger"    id="btn-del-${i+1}"      onclick="remove(${e.id})">Eliminar</button>
         </td>
       </tr>`).join('');
 
   } catch {
     tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-danger">No se pudo conectar con la API</td></tr>';
   }
+}
+
+function edit(id) {
+  const e = entries.find(x => x.id === id);
+  document.getElementById('modalTitle').textContent  = 'Editar registro';
+  document.getElementById('entryId').value           = e.id;
+  document.getElementById('customerName').value      = e.customerName;
+  document.getElementById('phone').value             = e.phone;
+  document.getElementById('message').value           = e.message;
+  modal.show();
 }
 
 async function remove(id) {
@@ -56,6 +78,7 @@ function showAlert(msg, type) {
   el.textContent = msg;
   setTimeout(() => (el.className = 'alert d-none'), 3000);
 }
+
 async function save() {
   const id   = document.getElementById('entryId').value;
   const body = {

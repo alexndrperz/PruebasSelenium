@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using CrmCrud.Api.Data;
+using CrmCrud.Api.Models;
 using CrmCrud.Api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -25,6 +26,12 @@ using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     db.Database.EnsureCreated();
+
+    if (!db.Users.Any())
+    {
+        db.Users.Add(new User { Username = "admin", Password = "admin" });
+        db.SaveChanges();
+    }
 }
 
 if (app.Environment.IsDevelopment())
