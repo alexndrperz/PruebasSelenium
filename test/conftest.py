@@ -1,4 +1,5 @@
 import sys
+import base64
 import pytest
 from pathlib import Path
 from selenium import webdriver
@@ -43,6 +44,7 @@ def pytest_runtest_makereport(item, call):
         driver.save_screenshot(str(path))
 
         if pytest_html:
-            extra.append(pytest_html.extras.image(str(path)))
+            img_b64 = base64.b64encode(path.read_bytes()).decode("utf-8")
+            extra.append(pytest_html.extras.png(img_b64))
 
     report.extra = extra
